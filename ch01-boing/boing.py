@@ -58,6 +58,8 @@ class Game():
             obj.update
 
     def draw(self):
+        screen.blit("table", (0, 0))
+
         for obj in self.actors:
             obj.draw()
 
@@ -73,7 +75,6 @@ def update():
     game.update()
 
 def draw(): 
-    screen.blit("table", (0, 0))
     game.draw()
 
 game = Game()
