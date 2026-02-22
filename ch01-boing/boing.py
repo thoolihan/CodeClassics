@@ -55,7 +55,7 @@ class Game():
     
     def update(self):
         for obj in self.actors:
-            obj.update
+            obj.update()
 
     def draw(self):
         screen.blit("table", (0, 0))
