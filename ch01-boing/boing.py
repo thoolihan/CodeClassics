@@ -1,4 +1,4 @@
-import pgzero, pgzrun
+import pgzero, pgzrun, pygame
 from enum import Enum
 from random import randint
 
@@ -80,15 +80,27 @@ class Bat(Actor):
 
 class Game():
     def __init__(self):
+        self.state = State.MENU
+        self.num_players = 1
+        self.actors = []
+    
+    def start_new_game(self):
         self.state = State.PLAY
         self.p1 = Bat(1, move_function=p1_move)
-        self.p2 = Bat(2)
+        if self.num_players == 1:
+            self.p2 = Bat(2)
+        else:
+            self.p2 = Bat(2, move_function=p2_move)
         self.ball = Ball(-1)
-
-        self.num_players = 1
-
         self.actors = [self.p1, self.p2, self.ball]
+
+    def go_to_menu(self):
+        self.state = State.MENU
+        self.actors = []
     
+    def end(self):
+        self.state = State.GAMEOVER
+
     def update(self):
         for obj in self.actors:
             obj.update()
@@ -124,7 +136,20 @@ def p2_move():
         return Direction.NONE
     
 def update():
-    game.update()
+    if game.state == State.MENU:
+        if keyboard.up:
+            game.num_players = 1
+        elif keyboard.down:
+            game.num_players = 2
+        elif keyboard.space:
+            game.start_new_game()
+    elif game.state == State.GAMEOVER:
+        if keyboard.space:
+            game.go_to_menu()
+    elif game.state == State.PLAY:
+        game.update()
+        if keyboard.escape:
+            game.end()
 
 def draw(): 
     game.draw()
