@@ -1,4 +1,5 @@
 venv
+.venv
 ch01-boing/images/
 ch01-boing/music/
 ch01-boing/sounds/
