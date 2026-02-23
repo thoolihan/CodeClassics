@@ -69,6 +69,7 @@ class Bat(Actor):
         self.score += 1
 
     def ai_move(self):
+        # ToDo: Implement actual AI, once ball movement is set. For now, just move randomly.
         dir = randint(-1, 1)
         if dir == 1:
             return Direction.UP
@@ -107,13 +108,21 @@ class Game():
             pass
 
 def p1_move():
-    if keyboard.up or keyboard.a:
+    if keyboard.up or keyboard.a or keyboard.s:
         return Direction.UP
-    elif keyboard.down or keyboard.z:
+    elif keyboard.down or keyboard.z or keyboard.x:
         return Direction.DOWN
     else:
         return Direction.NONE
-
+    
+def p2_move():
+    if keyboard.k or keyboard.l or keyboard.semicolon or keyboard.quote:
+        return Direction.UP
+    elif keyboard.m or keyboard.comma or keyboard.period or keyboard.slash:
+        return Direction.DOWN
+    else:
+        return Direction.NONE
+    
 def update():
     game.update()
 
