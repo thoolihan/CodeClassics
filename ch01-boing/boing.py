@@ -12,6 +12,16 @@ MIDDLE_Y = HEIGHT // 2
 PLAYER_SPEED=6
 MAX_AI_SPEED=6
 
+class State(Enum):
+    MENU = 1
+    PLAY = 2
+    GAMEOVER = 3
+
+class Direction(Enum):
+    UP = 1
+    DOWN = 2
+    NONE = 3
+
 class Ball(Actor):
     def __init__(self, dx):
         super().__init__("ball", (0, 0))
@@ -24,7 +34,7 @@ class Ball(Actor):
         pass
     
 class Bat(Actor):
-    def __init__(self, player):
+    def __init__(self, player, speed=PLAYER_SPEED):
         super().__init__("bat00", (0, 0))
         if player == 1:
             self.x = BAT_PADDING
@@ -33,14 +43,23 @@ class Bat(Actor):
         else:
             raise ValueError(f"Player should be 1 or 2, value passed in was {player}")
         self.y = MIDDLE_Y
+        self.speed = speed
     
     def update(self):
         pass
 
-class State(Enum):
-    MENU = 1
-    PLAY = 2
-    GAMEOVER = 3
+    def move(self, direction):
+        if direction == Direction.UP:
+            self.y -= self.speed
+        elif direction == Direction.DOWN:
+            self.y += self.speed
+
+        if self.y < 0:
+            self.y = 0
+        elif self.y > HEIGHT:
+            self.y = HEIGHT
+
+
 
 class Game():
     def __init__(self):
