@@ -1,5 +1,6 @@
 import pgzero, pgzrun
 from enum import Enum
+from random import randint
 
 WIDTH=800
 HEIGHT=480
@@ -34,7 +35,7 @@ class Ball(Actor):
         pass
     
 class Bat(Actor):
-    def __init__(self, player, speed=PLAYER_SPEED):
+    def __init__(self, player, speed=PLAYER_SPEED, move_function=None):
         super().__init__("bat00", (0, 0))
         if player == 1:
             self.x = BAT_PADDING
@@ -44,27 +45,42 @@ class Bat(Actor):
             raise ValueError(f"Player should be 1 or 2, value passed in was {player}")
         self.y = MIDDLE_Y
         self.speed = speed
+        self.score = 0
+        if move_function is None:
+            move_function = self.ai_move
+        self.get_move = move_function
     
     def update(self):
-        pass
+        _dir = self.get_move()
+        self.move(_dir)
 
-    def move(self, direction):
-        if direction == Direction.UP:
+    def move(self, dir_move):
+        if dir_move == Direction.UP:
             self.y -= self.speed
-        elif direction == Direction.DOWN:
+        elif dir_move == Direction.DOWN:
             self.y += self.speed
 
         if self.y < 0:
             self.y = 0
         elif self.y > HEIGHT:
             self.y = HEIGHT
+    
+    def score_point(self):
+        self.score += 1
 
-
+    def ai_move(self):
+        dir = randint(-1, 1)
+        if dir == 1:
+            return Direction.UP
+        elif dir == -1:
+            return Direction.DOWN
+        else:
+            return Direction.NONE
 
 class Game():
     def __init__(self):
-        self.state = State.MENU
-        self.p1 = Bat(1)
+        self.state = State.PLAY
+        self.p1 = Bat(1, move_function=p1_move)
         self.p2 = Bat(2)
         self.ball = Ball(-1)
 
@@ -89,6 +105,14 @@ class Game():
             screen.blit(menu_image, (0, 0))
         else:
             pass
+
+def p1_move():
+    if keyboard.up or keyboard.a:
+        return Direction.UP
+    elif keyboard.down or keyboard.z:
+        return Direction.DOWN
+    else:
+        return Direction.NONE
 
 def update():
     game.update()
