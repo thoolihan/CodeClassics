@@ -13,6 +13,8 @@ MIDDLE_Y = HEIGHT // 2
 PLAYER_SPEED=6
 MAX_AI_SPEED=6
 
+space_held = False
+
 class State(Enum):
     MENU = 1
     PLAY = 2
@@ -136,15 +138,20 @@ def p2_move():
         return Direction.NONE
     
 def update():
+    global space_held, game
+    space_pressed = False
+    if keyboard.space and not space_held:
+        space_pressed = True
+    space_held = keyboard.space
     if game.state == State.MENU:
         if keyboard.up:
             game.num_players = 1
         elif keyboard.down:
             game.num_players = 2
-        elif keyboard.space:
+        elif space_pressed:
             game.start_new_game()
     elif game.state == State.GAMEOVER:
-        if keyboard.space:
+        if space_pressed:
             game.go_to_menu()
     elif game.state == State.PLAY:
         game.update()
