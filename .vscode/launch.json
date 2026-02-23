@@ -1,0 +1,12 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Boing",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/ch01-boing/boing.py",
+            "python": "${workspaceFolder}/.venv/Scripts/python.exe"
+        }
+    ]
+}
