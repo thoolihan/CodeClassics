@@ -10,6 +10,10 @@ TITLE="Tim's Boing"
 MIDDLE_X = WIDTH // 2
 MIDDLE_Y = HEIGHT // 2
 
+HALF_BAT = 9
+HALF_BALL = 7
+PLANE = MIDDLE_X - (BAT_PADDING + HALF_BAT + HALF_BALL)
+
 PLAYER_SPEED=6
 MAX_AI_SPEED=6
 
@@ -32,9 +36,40 @@ class Ball(Actor):
         self.y = MIDDLE_Y
         self.dx = dx
         self.dy = 0
+        self.speed = 5
+        self.half_bat = 64
 
     def update(self):
-        pass
+        passing = False       
+
+        for i in range(self.speed):
+            self.x += self.dx
+            self.y += self.dy
+
+            if self.y < 0:
+                self.y = 0
+                self.dy *= -1
+            elif self.y > HEIGHT:
+                self.y = HEIGHT
+                self.dy *= -1
+        
+            if not passing and (self.x < (MIDDLE_X - PLANE) or self.x > (MIDDLE_X + PLANE)):
+                passing = True
+                if self.dx < 0:
+                    # ball headed left
+                    differnce_y = abs(self.y - game.p1.y)
+                    if differnce_y < self.half_bat:
+                        self.dx *= -1
+                        #self.dy = foo
+                else:
+                    # ball headed right
+                    differnce_y = abs(self.y - game.p2.y)      
+                    if differnce_y < self.half_bat:
+                        self.dx *= -1
+                        #self.dy = foo          
+    
+    def out(self):
+        return self.x < 0 or self.x > WIDTH
     
 class Bat(Actor):
     def __init__(self, player, speed=PLAYER_SPEED, move_function=None):
@@ -162,5 +197,15 @@ def draw():
     game.draw()
 
 game = Game()
+
+try:
+    pygame.mixer.quit()
+    pygame.mixer.init(44100, -16, 2, 1024)
+
+    music.play("theme")
+    music.set_volume(0.3)
+except Exception:
+    # If an error occurs (e.g. no sound device), just ignore it
+    pass
 
 pgzrun.go()
