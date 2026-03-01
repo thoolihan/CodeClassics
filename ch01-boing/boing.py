@@ -1,6 +1,7 @@
 import pgzero, pgzrun, pygame
 from enum import Enum
 from random import randint
+import math
 
 WIDTH=800
 HEIGHT=480
@@ -10,14 +11,22 @@ TITLE="Tim's Boing"
 MIDDLE_X = WIDTH // 2
 MIDDLE_Y = HEIGHT // 2
 
-HALF_BAT = 9
+HALF_BATX = 9
+HALF_BATY = 64
 HALF_BALL = 7
-PLANE = MIDDLE_X - (BAT_PADDING + HALF_BAT + HALF_BALL)
+PLANE = MIDDLE_X - (BAT_PADDING + HALF_BATX + HALF_BALL)
 
 PLAYER_SPEED=6
 MAX_AI_SPEED=6
 
 space_held = False
+
+def clip(value, min_value = -1, max_value = 1):
+    return max(min_value, min(value, max_value))
+
+def normalize(x, y):
+    length = math.hypot(x, y)
+    return (x / length, y / length)
 
 class State(Enum):
     MENU = 1
@@ -37,10 +46,13 @@ class Ball(Actor):
         self.dx = dx
         self.dy = 0
         self.speed = 5
-        self.half_bat = 64
+        self.pause_counter = 0
+        self.rebound_counter = 0
 
     def update(self):
         passing = False       
+        if self.rebound_counter > 0:
+            self.rebound_counter -= 1
 
         for i in range(self.speed):
             self.x += self.dx
@@ -53,36 +65,55 @@ class Ball(Actor):
                 self.y = HEIGHT
                 self.dy *= -1
         
-            if not passing and (self.x < (MIDDLE_X - PLANE) or self.x > (MIDDLE_X + PLANE)):
+            if not passing and \
+                self.rebound_counter==0 and \
+                (self.x < (MIDDLE_X - PLANE) or self.x > (MIDDLE_X + PLANE)):
                 passing = True
                 if self.dx < 0:
                     # ball headed left
-                    differnce_y = abs(self.y - game.p1.y)
-                    if differnce_y < self.half_bat:
-                        self.dx *= -1
-                        #self.dy = foo
+                    diff_y = self.y - game.p1.y
+                    if abs(diff_y) < HALF_BATY:
+                        self.rebound(diff_y)
+                        game.p1.rebound()
                 else:
                     # ball headed right
-                    differnce_y = abs(self.y - game.p2.y)      
-                    if differnce_y < self.half_bat:
-                        self.dx *= -1
-                        #self.dy = foo          
+                    diff_y = self.y - game.p2.y
+                    if abs(diff_y) < HALF_BATY:
+                        self.rebound(diff_y)    
+                        game.p2.rebound()     
 
-            if self.out():
+            if self.out() and self.pause_counter == 0:
+                self.pause_counter = 20
                 if self.dx < 0:
                     game.p2.score_point()
+                    game.p1.opp_scored_counter = 20
                 else:
                     game.p1.score_point()
-                game.ball = Ball(-self.dx)
-                game.actors[2] = game.ball
-                break                        
+                    game.p2.opp_scored_counter = 20
+
+            if self.pause_counter > 0:
+                    self.pause_counter -= 1
+                    game.ball = Ball(-self.dx)
+                    game.actors[2] = game.ball
+                    break     
+
+    def rebound(self, diff_y):
+        self.rebound_counter = 2
+        self.dx *= -1
+        self.dy += diff_y / (HALF_BATY * 2)
+        self.dy = clip(self.dy)
+        self.dx, self.dy = normalize(self.dx, self.dy)
+        if self.speed < MIDDLE_X:
+            self.speed+=1
+        else:
+            pass 
     
     def out(self):
         return self.x < 0 or self.x > WIDTH
     
 class Bat(Actor):
     def __init__(self, player, speed=PLAYER_SPEED, move_function=None):
-        super().__init__("bat00", (0, 0))
+        super().__init__(f"bat{player-1}0", (0, 0))
         self.player = player
         if self.player == 1:
             self.x = BAT_PADDING
@@ -97,10 +128,13 @@ class Bat(Actor):
             move_function = self.ai_move
         self.get_move = move_function
         self.score_counter = 0
+        self.rebound_counter = 0
+        self.opp_scored_counter = 0
     
     def update(self):
         _dir = self.get_move()
         self.move(_dir)
+        self.image = self.bat_sprite()
 
     def move(self, dir_move):
         if dir_move == Direction.UP:
@@ -108,19 +142,33 @@ class Bat(Actor):
         elif dir_move == Direction.DOWN:
             self.y += self.speed
 
-        if self.y < 0:
-            self.y = 0
-        elif self.y > HEIGHT:
-            self.y = HEIGHT
+        if self.y < HALF_BATY:
+            self.y = HALF_BATY
+        elif self.y > (HEIGHT - HALF_BATY):
+            self.y = HEIGHT - HALF_BATY
     
     def score_point(self):
         self.score += 1
         self.score_counter = 30
 
-    def score_color(self):
+    def rebound(self):
+        self.rebound_counter = 15
+
+    def bat_sprite(self):
+        if self.rebound_counter > 0:
+            self.rebound_counter -= 1
+            return f"bat{self.player-1}1"
+        elif self.opp_scored_counter > 0:
+            self.opp_scored_counter -= 1
+            return f"bat{self.player-1}2"
+        else:
+            return f"bat{self.player-1}0"
+        
+
+    def score_color(self):   
         if self.score_counter > 0:
             self.score_counter -= 1
-            return self.player
+            return 3 - self.player
         else:
             return 0        
 
