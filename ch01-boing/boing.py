@@ -67,6 +67,15 @@ class Ball(Actor):
                     if differnce_y < self.half_bat:
                         self.dx *= -1
                         #self.dy = foo          
+
+            if self.out():
+                if self.dx < 0:
+                    game.p2.score_point()
+                else:
+                    game.p1.score_point()
+                game.ball = Ball(-self.dx)
+                game.actors[2] = game.ball
+                break                        
     
     def out(self):
         return self.x < 0 or self.x > WIDTH
@@ -74,9 +83,10 @@ class Ball(Actor):
 class Bat(Actor):
     def __init__(self, player, speed=PLAYER_SPEED, move_function=None):
         super().__init__("bat00", (0, 0))
-        if player == 1:
+        self.player = player
+        if self.player == 1:
             self.x = BAT_PADDING
-        elif player == 2:
+        elif self.player == 2:
             self.x = WIDTH - BAT_PADDING
         else:
             raise ValueError(f"Player should be 1 or 2, value passed in was {player}")
@@ -86,6 +96,7 @@ class Bat(Actor):
         if move_function is None:
             move_function = self.ai_move
         self.get_move = move_function
+        self.score_counter = 0
     
     def update(self):
         _dir = self.get_move()
@@ -104,6 +115,14 @@ class Bat(Actor):
     
     def score_point(self):
         self.score += 1
+        self.score_counter = 30
+
+    def score_color(self):
+        if self.score_counter > 0:
+            self.score_counter -= 1
+            return self.player
+        else:
+            return 0        
 
     def ai_move(self):
         # ToDo: Implement actual AI, once ball movement is set. For now, just move randomly.
@@ -145,9 +164,20 @@ class Game():
     def draw(self):
         screen.blit("table", (0, 0))
 
+        # draw ball, bats
         for obj in self.actors:
             obj.draw()
 
+        # draw score
+        if self.state != State.MENU:
+            p1_d1_img = f"digit{self.p1.score_color()}{(self.p1.score // 10)}"
+            p1_d2_img = f"digit{self.p1.score_color()}{(self.p1.score % 10)}"
+            p2_d1_img = f"digit{self.p2.score_color()}{(self.p2.score // 10)}"
+            p2_d2_img = f"digit{self.p2.score_color()}{(self.p2.score % 10)}"            
+            screen.blit(p1_d1_img, (WIDTH // 4 - 20, 20))
+            screen.blit(p1_d2_img, (WIDTH // 4 + 20, 20))
+            screen.blit(p2_d1_img, (WIDTH * 3 // 4 - 20, 20))
+            screen.blit(p2_d2_img, (WIDTH * 3 // 4 + 20, 20))
         if self.state == State.GAMEOVER:
             screen.blit("over", (0, 0))
         elif self.state == State.MENU:
@@ -189,9 +219,10 @@ def update():
         if space_pressed:
             game.go_to_menu()
     elif game.state == State.PLAY:
-        game.update()
-        if keyboard.escape:
+        if keyboard.escape or max(game.p1.score, game.p2.score) > 9:
             game.end()
+        else: 
+            game.update()
 
 def draw(): 
     game.draw()
