@@ -15,6 +15,21 @@
             "linux": {
                 "python": "${workspaceFolder}/.venv/bin/python"
             }
+        },
+        {
+            "name": "Boing_Book",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/book/boing-master/boing.py",
+            "windows": {
+                "python": "${workspaceFolder}/.venv/Scripts/python.exe"
+            },
+            "osx": {
+                "python": "${workspaceFolder}/.venv/bin/python"
+            },
+            "linux": {
+                "python": "${workspaceFolder}/.venv/bin/python"
+            }
         }
     ]
 }
