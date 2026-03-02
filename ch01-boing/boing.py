@@ -39,6 +39,15 @@ class Direction(Enum):
     DOWN = 2
     NONE = 3
 
+class Impact(Actor):
+    def __init__(self, pos):
+        super().__init__("blank", pos)
+        self.time = 0
+    
+    def update(self):
+        self.image = f"impact{self.time // 2}"
+        self.time += 1
+
 class Ball(Actor):
     def __init__(self, dx):
         super().__init__("ball", (0, 0))
@@ -62,11 +71,13 @@ class Ball(Actor):
                 self.dy *= -1
                 game.play_sound("bounce", count = 5)
                 game.play_sound("bounce_synth")
+                game.impacts.append(Impact(self.pos))
             elif self.y > HEIGHT:
                 self.y = HEIGHT
                 self.dy *= -1
                 game.play_sound("bounce", count = 5)
                 game.play_sound("bounce_synth")
+                game.impacts.append(Impact(self.pos))
             if not passing and \
                 ((self.dx < 0 and self.x < (MIDDLE_X - PLANE)) or \
                 (self.dx > 0 and self.x > (MIDDLE_X + PLANE))):
@@ -99,6 +110,7 @@ class Ball(Actor):
                         break     
 
     def rebound(self, diff_y):
+        game.impacts.append(Impact(self.pos))
         game.play_sound("hit", 5)
         if self.speed <= 10:
             game.play_sound("hit_slow", 1)
@@ -199,6 +211,7 @@ class Bat(Actor):
 class Game():
     def __init__(self):
         self.num_players = 1
+        self.impacts = []
         self.go_to_menu()
     
     def start_new_game(self):
@@ -242,6 +255,12 @@ class Game():
         for obj in self.actors:
             obj.update()
 
+        for i in range(len(self.impacts) - 1, -1, -1):
+            if self.impacts[i].time >= 10:
+                del self.impacts[i]   
+            else: 
+                self.impacts[i].update()          
+
     def draw(self):
         screen.blit("table", (0, 0))
 
@@ -251,7 +270,10 @@ class Game():
             if isinstance(obj, Bat):
                 if obj.opp_scored_counter > 0 and game.ball.out():
                     screen.blit(f"effect{obj.player-1}", (0, 0))
-
+        
+        for impact in self.impacts:
+            impact.draw()
+            
         # draw score
         if self.state != State.MENU:
             p1_score_color = self.p1.score_color()
