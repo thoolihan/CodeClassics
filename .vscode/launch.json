@@ -30,6 +30,36 @@
             "linux": {
                 "python": "${workspaceFolder}/.venv/bin/python"
             }
+        },
+                {
+            "name": "Bunner",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/ch02-bunner/bunner.py",
+            "windows": {
+                "python": "${workspaceFolder}/.venv/Scripts/python.exe"
+            },
+            "osx": {
+                "python": "${workspaceFolder}/.venv/bin/python"
+            },
+            "linux": {
+                "python": "${workspaceFolder}/.venv/bin/python"
+            }
+        },
+        {
+            "name": "Bunner_Book",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/book/bunner-master/bunner.py",
+            "windows": {
+                "python": "${workspaceFolder}/.venv/Scripts/python.exe"
+            },
+            "osx": {
+                "python": "${workspaceFolder}/.venv/bin/python"
+            },
+            "linux": {
+                "python": "${workspaceFolder}/.venv/bin/python"
+            }
         }
     ]
 }
