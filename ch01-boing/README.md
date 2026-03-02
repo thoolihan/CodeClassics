@@ -9,6 +9,6 @@ All known bugs resolved.
 ## Missing Features (vs book)
 
 - **Impact animations**: No visual bounce effect when ball hits bat or wall.
-- **Proper AI**: AI movement is random. Book uses a weighted average based on ball distance, plus a random offset so it isn't perfect.
+- ~~**Proper AI**: AI movement is random. Book uses a weighted average based on ball distance, plus a random offset so it isn't perfect.~~ Fixed.
 - ~~**`bounce_synth` sound**: Book plays both `bounce` and `bounce_synth` on wall bounces.~~ Fixed.
 - ~~**Menu attract mode**: Book runs an AI vs AI game in the background on the menu screen.~~ Fixed.

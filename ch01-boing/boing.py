@@ -1,6 +1,6 @@
 import pgzero, pgzrun, pygame
 from enum import Enum
-from random import randint
+from random import randint, uniform
 import math
 import random
 
@@ -60,13 +60,13 @@ class Ball(Actor):
             if self.y < 0:
                 self.y = 0
                 self.dy *= -1
-                self.play_sound("bounce", count = 5)
-                self.play_sound("bounce_synth")
+                game.play_sound("bounce", count = 5)
+                game.play_sound("bounce_synth")
             elif self.y > HEIGHT:
                 self.y = HEIGHT
                 self.dy *= -1
-                self.play_sound("bounce", count = 5)
-                self.play_sound("bounce_synth")
+                game.play_sound("bounce", count = 5)
+                game.play_sound("bounce_synth")
             if not passing and \
                 ((self.dx < 0 and self.x < (MIDDLE_X - PLANE)) or \
                 (self.dx > 0 and self.x > (MIDDLE_X + PLANE))):
@@ -85,7 +85,7 @@ class Ball(Actor):
                         game.p2.rebound()     
 
             if self.out() and self.pause_counter == 0:
-                self.pause_counter = 100
+                self.pause_counter = 300
                 if self.dx < 0:
                     game.player_scored(2)
                 else:
@@ -94,26 +94,20 @@ class Ball(Actor):
             if self.pause_counter > 0:
                     self.pause_counter -= 1
                     if self.pause_counter == 0:
-                        game.ball = Ball(self.dx)
+                        game.ball = Ball(-1 * self.dx)
                         game.actors[2] = game.ball
                         break     
 
-    def play_sound(self, name, count=1):
-        try:
-            getattr(sounds, name + str(random.randint(0, count - 1))).play()
-        except Exception as e:
-            pass
-
     def rebound(self, diff_y):
-        self.play_sound("hit", 5)
+        game.play_sound("hit", 5)
         if self.speed <= 10:
-            self.play_sound("hit_slow", 1)
+            game.play_sound("hit_slow", 1)
         elif self.speed <= 12:
-            self.play_sound("hit_medium", 1)
+            game.play_sound("hit_medium", 1)
         elif self.speed <= 16:
-            self.play_sound("hit_fast", 1)
+            game.play_sound("hit_fast", 1)
         else:
-            self.play_sound("hit_veryfast", 1)
+            game.play_sound("hit_veryfast", 1)
         self.dx *= -1
         self.dy += diff_y / (HALF_BATY * 2)
         self.dy = clip(self.dy)
@@ -189,10 +183,15 @@ class Bat(Actor):
 
     def ai_move(self):
         # ToDo: Implement actual AI, once ball movement is set. For now, just move randomly.
-        dir = randint(-1, 1)
-        if dir == 1:
+        target_y = game.ball.y + uniform(-HALF_BATY, HALF_BATY)
+        if (game.ball.x - self.x) > MIDDLE_X:
+            target_y = MIDDLE_Y
+
+        dir = target_y - self.y
+
+        if dir < 0:
             return Direction.UP
-        elif dir == -1:
+        elif dir > 0:
             return Direction.DOWN
         else:
             return Direction.NONE
@@ -226,6 +225,7 @@ class Game():
         self.p1 = Bat(1)
         self.p2 = Bat(2)
         self.ball = Ball(-1)
+        self.ball.dy = uniform(-.5, .5)
         self.actors = [self.p1, self.p2, self.ball]
     
     def end(self):
