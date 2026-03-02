@@ -4,6 +4,7 @@ from random import randint, uniform
 import math
 import random
 
+# region Constants
 WIDTH=800
 HEIGHT=480
 BAT_PADDING=40
@@ -19,6 +20,7 @@ PLANE = MIDDLE_X - (BAT_PADDING + HALF_BATX + HALF_BALL)
 
 PLAYER_SPEED=6
 MAX_AI_SPEED=6
+# endregion
 
 space_held = False
 
@@ -163,10 +165,7 @@ class Bat(Actor):
         elif dir_move == Direction.DOWN:
             self.y += self.speed
 
-        if self.y < HALF_BATY:
-            self.y = HALF_BATY
-        elif self.y > (HEIGHT - HALF_BATY):
-            self.y = HEIGHT - HALF_BATY
+        self.y = clip(self.y, HALF_BATY, HEIGHT - HALF_BATY)
     
     def score_point(self):
         self.score += 1
@@ -273,7 +272,7 @@ class Game():
         
         for impact in self.impacts:
             impact.draw()
-            
+
         # draw score
         if self.state != State.MENU:
             p1_score_color = self.p1.score_color()
