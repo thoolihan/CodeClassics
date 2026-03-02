@@ -61,11 +61,12 @@ class Ball(Actor):
                 self.y = 0
                 self.dy *= -1
                 self.play_sound("bounce", count = 5)
+                self.play_sound("bounce_synth")
             elif self.y > HEIGHT:
                 self.y = HEIGHT
                 self.dy *= -1
                 self.play_sound("bounce", count = 5)
-
+                self.play_sound("bounce_synth")
             if not passing and \
                 ((self.dx < 0 and self.x < (MIDDLE_X - PLANE)) or \
                 (self.dx > 0 and self.x > (MIDDLE_X + PLANE))):
@@ -93,7 +94,7 @@ class Ball(Actor):
             if self.pause_counter > 0:
                     self.pause_counter -= 1
                     if self.pause_counter == 0:
-                        game.ball = Ball(-self.dx)
+                        game.ball = Ball(self.dx)
                         game.actors[2] = game.ball
                         break     
 
@@ -198,9 +199,8 @@ class Bat(Actor):
 
 class Game():
     def __init__(self):
-        self.state = State.MENU
         self.num_players = 1
-        self.actors = []
+        self.go_to_menu()
     
     def start_new_game(self):
         self.state = State.PLAY
@@ -223,16 +223,20 @@ class Game():
 
     def go_to_menu(self):
         self.state = State.MENU
-        self.actors = []
+        self.p1 = Bat(1)
+        self.p2 = Bat(2)
+        self.ball = Ball(-1)
+        self.actors = [self.p1, self.p2, self.ball]
     
     def end(self):
         self.state = State.GAMEOVER
 
     def play_sound(self, name, count=1):
-        try:
-            getattr(sounds, name + str(random.randint(0, count - 1))).play()
-        except Exception as e:
-            pass        
+        if self.state != State.MENU:
+            try:
+                getattr(sounds, name + str(random.randint(0, count - 1))).play()
+            except Exception as e:
+                pass        
 
     def update(self):
         for obj in self.actors:
@@ -245,15 +249,17 @@ class Game():
         for obj in self.actors:
             obj.draw()
             if isinstance(obj, Bat):
-                if obj.opp_scored_counter > 0:
+                if obj.opp_scored_counter > 0 and game.ball.out():
                     screen.blit(f"effect{obj.player-1}", (0, 0))
 
         # draw score
         if self.state != State.MENU:
-            p1_d1_img = f"digit{self.p1.score_color()}{(self.p1.score // 10)}"
-            p1_d2_img = f"digit{self.p1.score_color()}{(self.p1.score % 10)}"
-            p2_d1_img = f"digit{self.p2.score_color()}{(self.p2.score // 10)}"
-            p2_d2_img = f"digit{self.p2.score_color()}{(self.p2.score % 10)}"            
+            p1_score_color = self.p1.score_color()
+            p1_d1_img = f"digit{p1_score_color}{(self.p1.score // 10)}"
+            p1_d2_img = f"digit{p1_score_color}{(self.p1.score % 10)}"
+            p2_score_color = self.p2.score_color()
+            p2_d1_img = f"digit{p2_score_color}{(self.p2.score // 10)}"
+            p2_d2_img = f"digit{p2_score_color}{(self.p2.score % 10)}"            
             screen.blit(p1_d1_img, (WIDTH // 4 - 20, 20))
             screen.blit(p1_d2_img, (WIDTH // 4 + 20, 20))
             screen.blit(p2_d1_img, (WIDTH * 3 // 4 - 20, 20))
@@ -290,14 +296,17 @@ def update():
     space_held = keyboard.space
     if game.state == State.MENU:
         if keyboard.up:
+            if game.num_players == 2:
+                sounds.up.play()
             game.num_players = 1
-            sounds.up.play()
         elif keyboard.down:
+            if game.num_players == 1:
+                sounds.down.play()
             game.num_players = 2
-            sounds.down.play()
         elif space_pressed:
             game.start_new_game()
             sounds.score_goal0.play()
+        game.update()
     elif game.state == State.GAMEOVER:
         if space_pressed:
             game.go_to_menu()
