@@ -2,6 +2,7 @@ import pgzero, pgzrun, pygame
 from enum import Enum
 from random import randint
 import math
+import random
 
 WIDTH=800
 HEIGHT=480
@@ -47,27 +48,27 @@ class Ball(Actor):
         self.dy = 0
         self.speed = 5
         self.pause_counter = 0
-        self.rebound_counter = 0
 
     def update(self):
         passing = False       
-        if self.rebound_counter > 0:
-            self.rebound_counter -= 1
 
         for i in range(self.speed):
             self.x += self.dx
             self.y += self.dy
 
+            # collision with top and bottom of screen
             if self.y < 0:
                 self.y = 0
                 self.dy *= -1
+                self.play_sound("bounce", count = 5)
             elif self.y > HEIGHT:
                 self.y = HEIGHT
                 self.dy *= -1
-        
+                self.play_sound("bounce", count = 5)
+
             if not passing and \
-                self.rebound_counter==0 and \
-                (self.x < (MIDDLE_X - PLANE) or self.x > (MIDDLE_X + PLANE)):
+                ((self.dx < 0 and self.x < (MIDDLE_X - PLANE)) or \
+                (self.dx > 0 and self.x > (MIDDLE_X + PLANE))):
                 passing = True
                 if self.dx < 0:
                     # ball headed left
@@ -83,22 +84,35 @@ class Ball(Actor):
                         game.p2.rebound()     
 
             if self.out() and self.pause_counter == 0:
-                self.pause_counter = 20
+                self.pause_counter = 100
                 if self.dx < 0:
-                    game.p2.score_point()
-                    game.p1.opp_scored_counter = 20
+                    game.player_scored(2)
                 else:
-                    game.p1.score_point()
-                    game.p2.opp_scored_counter = 20
+                    game.player_scored(1)
 
             if self.pause_counter > 0:
                     self.pause_counter -= 1
-                    game.ball = Ball(-self.dx)
-                    game.actors[2] = game.ball
-                    break     
+                    if self.pause_counter == 0:
+                        game.ball = Ball(-self.dx)
+                        game.actors[2] = game.ball
+                        break     
+
+    def play_sound(self, name, count=1):
+        try:
+            getattr(sounds, name + str(random.randint(0, count - 1))).play()
+        except Exception as e:
+            pass
 
     def rebound(self, diff_y):
-        self.rebound_counter = 2
+        self.play_sound("hit", 5)
+        if self.speed <= 10:
+            self.play_sound("hit_slow", 1)
+        elif self.speed <= 12:
+            self.play_sound("hit_medium", 1)
+        elif self.speed <= 16:
+            self.play_sound("hit_fast", 1)
+        else:
+            self.play_sound("hit_veryfast", 1)
         self.dx *= -1
         self.dy += diff_y / (HALF_BATY * 2)
         self.dy = clip(self.dy)
@@ -198,12 +212,27 @@ class Game():
         self.ball = Ball(-1)
         self.actors = [self.p1, self.p2, self.ball]
 
+    def player_scored(self, pnum):
+        if pnum == 1:
+            self.p1.score_point()
+            self.p2.opp_scored_counter = 20
+        elif pnum == 2:
+            self.p2.score_point()
+            self.p1.opp_scored_counter = 20
+        self.play_sound("score_goal")
+
     def go_to_menu(self):
         self.state = State.MENU
         self.actors = []
     
     def end(self):
         self.state = State.GAMEOVER
+
+    def play_sound(self, name, count=1):
+        try:
+            getattr(sounds, name + str(random.randint(0, count - 1))).play()
+        except Exception as e:
+            pass        
 
     def update(self):
         for obj in self.actors:
@@ -215,6 +244,9 @@ class Game():
         # draw ball, bats
         for obj in self.actors:
             obj.draw()
+            if isinstance(obj, Bat):
+                if obj.opp_scored_counter > 0:
+                    screen.blit(f"effect{obj.player-1}", (0, 0))
 
         # draw score
         if self.state != State.MENU:
@@ -259,10 +291,13 @@ def update():
     if game.state == State.MENU:
         if keyboard.up:
             game.num_players = 1
+            sounds.up.play()
         elif keyboard.down:
             game.num_players = 2
+            sounds.down.play()
         elif space_pressed:
             game.start_new_game()
+            sounds.score_goal0.play()
     elif game.state == State.GAMEOVER:
         if space_pressed:
             game.go_to_menu()
