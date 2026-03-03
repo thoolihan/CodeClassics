@@ -1,9 +1,6 @@
 venv
 .venv
 high.text
-ch01-boing/images/
-ch01-boing/music/
-ch01-boing/sounds/
-ch02-bunner/images/
-ch02-bunner/music/
-ch02-bunner/sounds/
+ch**/images/
+ch**/music/
+ch**/sounds/
